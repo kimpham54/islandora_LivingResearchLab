@@ -1,0 +1,385 @@
+<?php
+
+/**
+ * @file
+ * Pig latin demo module.
+ *
+ */
+
+/**
+ * Implements hook_menu().
+ * Drupal menus allow urls to be used as function calls, giving Drupal gets much
+ * of its power and flexibillty.
+ * See https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_menu/7
+ */
+function islandora_livingresearchlab_menu() {
+  return array(
+    'admin/islandora/livingresearchlab' => array(
+      'title' => 'DSU Living Research Lab Solution Pack',
+      'description' => 'Configure the Living Research Lab solution pack.',
+      'page callback' => 'drupal_get_form',
+      'access arguments' => array('administer site configuration'),
+      'page arguments' => array('islandora_livingresearchlab_admin'),
+      'file' => 'includes/islandora_livingresearchlab.admin.inc',
+      'type' => MENU_NORMAL_ITEM,
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme().
+ *
+ * We supply a pattern so we can overide templates at the theme level if needed.
+ * we can append a pid to a template and the new template file will be called
+ * (the pids colon should be replaced with a dash)
+ */
+function islandora_livingresearchlab_theme($existing, $type, $theme, $path) {
+  return array(
+    'islandora_livingresearchlab' => array(
+      'template' => 'theme/islandora-livingresearchlab',
+      'pattern' => 'islandora_livingresearchlab__',
+      'variables' => array('islandora_object' => NULL),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_preprocess_theme().
+ * This is a Drupal hook, not supplied by islandora.
+ * Variables required for display are assembled here and passed to the template file
+ * defined in the theme function.  The function defines islandora-livingresearchlab, which
+ * expands to islandora-livingresearchlab.tpl.php.
+ * The isandora object has been added to the $variables array by 
+ * hook_CMODEL_PID_islandora_view_object(), whihc in this case is
+ * islandora_livingresearchlab_islandora_livingresearchlabCModel_islandora_view_object
+ * 
+ */
+function islandora_livingresearchlab_preprocess_islandora_livingresearchlab(array &$variables) {
+
+  $islandora_object = $variables['islandora_object'];
+  // Thumbnail.
+  if (isset($islandora_object['TN'])) {
+    $thumbnail_size_url = url("islandora/object/{$islandora_object->id}/datastream/TN/view");
+    $params = array(
+      'title' => $islandora_object->label,
+      'path' => $thumbnail_size_url,
+    );
+    $variables['islandora_thumbnail_img'] = theme('image', $params);
+  }
+}
+
+
+
+/**
+ * Implements hook_CMODEL_PID_islandora_view_object().
+ * If an object's behavior is defined by the islandora_livingresearchlab_islandora_livingresearchlabCModel content model
+ * this hook takes the object being displayed and sends it to the theme function described by islandora_livingresearchlab_theme.
+ * A reference to the islandora object being displayed is added here as a member of
+ * the array whihc makes the seond argument to the theme function.
+ */
+function islandora_livingresearchlab_islandora_livingresearchlabCModel_islandora_view_object($object, $page_number, $page_size) {
+  $output = theme('islandora_livingresearchlab', array('islandora_object' => $object));
+  return array('' => $output);
+}
+
+/**
+ * Implements hook_islandora_ingest_steps().
+ * This hook adds a single ingest step, but more could be added as seperate entries.
+ */
+
+// no upload 2014-08-14
+// function islandora_livingresearchlab_islandora_livingresearchlabCModel_islandora_ingest_steps(array $configuration) {
+//   return array(
+//     'islandora_livingresearchlab_file_upload' => array(
+//       'weight' => 10,
+//       'type' => 'form',
+//       'form_id' => 'islandora_livingresearchlab_upload_form',
+//       'module' => 'islandora_livingresearchlab',
+//       'file' => 'includes/islandora_livingresearchlab_upload.form.inc'
+//     )
+//   );
+// }
+
+
+/**
+ * Implements hook_CMODEL_PID_islandora_object_ingested().
+ * This hook tells Islandora what to do with the object once it has been ingested.
+ * In this case the raw text has been uploaded so we'll be in a position to 
+ * use that as input for our derived datastreams. The function
+ * islandora_livingresearchlab_create_all_derivatives will be called with a refrence to the 
+ * as yet uningested object. 
+ */
+
+// no upload 2014-08-14
+// function islandora_livingresearchlab_islandora_livingresearchlabCModel_islandora_object_ingested($object) {
+//   module_load_include('inc', 'islandora_livingresearchlab', 'includes/derivatives');
+//   islandora_livingresearchlab_create_all_derivatives($object);
+// }
+
+/**
+ * Implements hook_islandora_xml_form_builder_forms().
+ * This hook makes a predefined ingest form for ingest.
+ */
+function islandora_livingresearchlab_islandora_xml_form_builder_forms() {
+  $module_path = drupal_get_path('module', 'islandora_livingresearchlab');
+  
+  return array(
+    'DSU Birth DwC' => array(
+      'form_file' => "$module_path/xml/forms/Birth_dwc.xml",
+    ),
+    'DSU Data Session DwC' => array(
+      'form_file' => "$module_path/xml/forms/DataSession_dwc.xml",
+    ),
+    'DSU Experiment DwC' => array(
+      'form_file' => "$module_path/xml/forms/Experiment_dwc.xml",
+    ),
+    'DSU Mouse DwC' => array(
+      'form_file' => "$module_path/xml/forms/Mouse_dwc.xml",
+    ),
+    'DSU Protocol DwC' => array(
+      'form_file' => "$module_path/xml/forms/Protocol_dwc.xml",
+    ),
+    'DSU Publication MODS' => array(
+      'form_file' => "$module_path/xml/forms/Publication_MODS.xml",
+    ),
+  );
+}
+
+
+
+
+
+function islandora_livingresearchlab_xml_form_builder_get_self_transforms() {
+  $module_path = drupal_get_path('module', 'islandora_livingresearchlab');
+   return array('dwcclassoccurrence2dc.xsl' => "$module_path/xsl/dwcclassoccurrence2dc.xsl.xsl",);
+}
+
+
+
+/**
+ * Implements hook_islandora_content_model_forms_form_associations().
+ * This hook associated our form with our content model.  Any time we try to ingest
+ * an object with the islandora:livingresearchlabCModel content model, we will see this form
+ * allowing us to supply relevant metadata.
+ */
+function islandora_livingresearchlab_islandora_content_model_forms_form_associations() {
+  $module_path = drupal_get_path('module', 'islandora_livingresearchlab');
+  
+  return array(
+    'islandora_livingresearchlab_birth_dwc_form' => array(
+      'content_model' => 'islandora:collectionCModel',
+      'form_name' => 'DSU Birth DwC',
+      'dsid' => 'DWC',
+      'title_field' => array('DarwinRecordSet', 'occurrence', 'occurrenceid'),
+      'transform' => 'dwcclassoccurrence2dc.xsl',
+      'template' => FALSE,
+    ),
+    'islandora_livingresearchlab_datasession_dwc_form' => array(
+      'content_model' => 'islandora:collectionCModel',
+      'form_name' => 'DSU Data Session DwC',
+      'dsid' => 'DWC',
+      'title_field' => array('DarwinRecordSet', 'event', 'collectiondate'),
+      'transform' => 'dwcclassoccurrence2dc.xsl',
+      'template' => FALSE,
+    ),
+    'islandora_livingresearchlab_experiment_dwc_form' => array(
+      'content_model' => 'islandora:collectionCModel',
+      'form_name' => 'DSU Experiment DwC',
+      'dsid' => 'DWC',
+      'title_field' => array('DarwinRecordSet', 'occurrence', 'occurrenceid'),
+      'transform' => 'dwcclassoccurrence2dc.xsl',
+      'template' => FALSE,
+    ),
+    'islandora_livingresearchlab_mouse_dwc_form' => array(
+      'content_model' => 'islandora:collectionCModel',
+      'form_name' => 'DSU Mouse DwC',
+      'dsid' => 'DWC',
+      'title_field' => array('DarwinRecordSet', 'occurrence', 'occurrenceid'),
+      'transform' => 'dwcclassoccurrence2dc.xsl',
+      'template' => FALSE,
+    ),
+    'islandora_livingresearchlab_protocol_dwc_form' => array(
+      'content_model' => 'islandora:collectionCModel',
+      'form_name' => 'DSU Protocol DwC',
+      'dsid' => 'DWC',
+      'title_field' => array('DarwinRecordSet', 'occurrence', 'occurrenceid'),
+      'transform' => 'dwcclassoccurrence2dc.xsl',
+      'template' => FALSE,
+    ),
+    'islandora_livingresearchlab_publication_dwc_form' => array(
+      'content_model' => 'islandora:sp_pdf',
+      'form_name' => 'DSU Publication MODS',
+      'dsid' => 'MODS',
+      'title_field' => array('titleInfo', 'title'),
+      'transform' => 'sites/all/modules/islandora_xml_forms/builder/transforms/mods_to_dc.xsl',
+      'template' => FALSE,
+    ),
+  );
+}
+
+
+
+
+
+
+
+
+
+//maybe? - kim
+
+// function islandora_livingresearchlab_collection_access($islandora_object) {
+//   if (!isset($islandora_object)) {
+//     return FALSE;
+//   }
+//   $models = $islandora_object->models;
+  
+//   if (isset($islandora_object['COLLECTION_POLICY']))//Es coleccion de algun tipo
+//     {
+//       $policy = new CollectionPolicy($islandora_object['COLLECTION_POLICY']->content);
+//       $policy_content_models = $policy->getContentModels();//Entrega los modelos de contenido que permite esta coleccion
+    
+//       if (array_intersect(array('biodiversity:biodiversityCModel'), array_keys($policy_content_models)) && array_intersect(array('islandora:collectionCModel'), $models)) {
+//         return TRUE; //Es decir es coleccion y sus hijos pueden ser de modelo biodiversity:biodiversityCModel
+//       }
+//     }
+ 
+ 
+//   return FALSE;
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Implements hook_islandora_required_objects().
+ * This hook ingests a very basic content model.  It is run when the module is
+ * first installed.
+ */
+function islandora_livingresearchlab_islandora_required_objects(IslandoraTuque $connection) {
+
+$module_path = drupal_get_path('module', 'islandora_livingresearchlab');
+
+/** BIRTHS root collection */  
+  $births_collection = $connection->repository->constructObject('islandora:births_collection');
+  $births_collection->owner = 'fedoraAdmin';
+  $births_collection->label = 'Births';
+  $births_collection->models = 'islandora:collectionCModel';
+  $births_collection->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
+
+  $datastream = $births_collection->constructDatastream('COLLECTION_POLICY', 'X');
+  $datastream->label = 'Collection policy';
+  $datastream->mimetype = 'text/xml';
+  $datastream->setContentFromFile("$module_path/xml/islandora_livingresearchlab_collection_policy.xml", FALSE);
+  $births_collection->ingestDatastream($datastream);
+
+  $datastream = $births_collection->constructDatastream('TN', 'M');
+  $datastream->label = 'Thumbnail';
+  $datastream->mimetype = 'image/png';
+  $datastream->setContentFromFile("$module_path/images/births.png", FALSE);
+  $births_collection->ingestDatastream($datastream);
+
+
+/** EXPERIMENTS root collection */  
+  $experiments_collection = $connection->repository->constructObject('islandora:experiments_collection');
+  $experiments_collection->owner = 'fedoraAdmin';
+  $experiments_collection->label = 'Experiments';
+  $experiments_collection->models = 'islandora:collectionCModel';
+  $experiments_collection->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
+
+  $datastream = $experiments_collection->constructDatastream('COLLECTION_POLICY', 'X');
+  $datastream->label = 'Collection policy';
+  $datastream->mimetype = 'text/xml';
+  $datastream->setContentFromFile("$module_path/xml/islandora_livingresearchlab_collection_policy.xml", FALSE);
+  $experiments_collection->ingestDatastream($datastream);
+
+  $datastream = $experiments_collection->constructDatastream('TN', 'M');
+  $datastream->label = 'Thumbnail';
+  $datastream->mimetype = 'image/png';
+  $datastream->setContentFromFile("$module_path/images/experiments.png", FALSE);
+  $experiments_collection->ingestDatastream($datastream);
+
+/** MICE root collection */  
+  $mice_collection = $connection->repository->constructObject('islandora:mice_collection');
+  $mice_collection->owner = 'fedoraAdmin';
+  $mice_collection->label = 'Mice';
+  $mice_collection->models = 'islandora:collectionCModel';
+  $mice_collection->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
+
+  $datastream = $mice_collection->constructDatastream('COLLECTION_POLICY', 'X');
+  $datastream->label = 'Collection policy';
+  $datastream->mimetype = 'text/xml';
+  $datastream->setContentFromFile("$module_path/xml/islandora_livingresearchlab_collection_policy.xml", FALSE);
+  $mice_collection->ingestDatastream($datastream);
+
+  $datastream = $mice_collection->constructDatastream('TN', 'M');
+  $datastream->label = 'Thumbnail';
+  $datastream->mimetype = 'image/png';
+  $datastream->setContentFromFile("$module_path/images/mice.png", FALSE);
+  $mice_collection->ingestDatastream($datastream);
+
+  /** PROTOCOLS root collection */  
+  $protocols_collection = $connection->repository->constructObject('islandora:protocols_collection');
+  $protocols_collection->owner = 'fedoraAdmin';
+  $protocols_collection->label = 'Protocols';
+  $protocols_collection->models = 'islandora:collectionCModel';
+  $protocols_collection->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
+
+  $datastream = $protocols_collection->constructDatastream('COLLECTION_POLICY', 'X');
+  $datastream->label = 'Collection policy';
+  $datastream->mimetype = 'text/xml';
+  $datastream->setContentFromFile("$module_path/xml/islandora_livingresearchlab_collection_policy.xml", FALSE);
+  $protocols_collection->ingestDatastream($datastream);
+
+  $datastream = $protocols_collection->constructDatastream('TN', 'M');
+  $datastream->label = 'Thumbnail';
+  $datastream->mimetype = 'image/png';
+  $datastream->setContentFromFile("$module_path/images/protocols.png", FALSE);
+  $protocols_collection->ingestDatastream($datastream);
+
+  /** PUBLICATIONS root collection */  
+  $publications_collection = $connection->repository->constructObject('islandora:publications_collection');
+  $publications_collection->owner = 'fedoraAdmin';
+  $publications_collection->label = 'Publications';
+  $publications_collection->models = 'islandora:collectionCModel';
+  $publications_collection->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:root');
+
+  $datastream = $publications_collection->constructDatastream('COLLECTION_POLICY', 'X');
+  $datastream->label = 'Collection policy';
+  $datastream->mimetype = 'text/xml';
+  $datastream->setContentFromFile("$module_path/xml/islandora_livingresearchlab_collection_policy.xml", FALSE);
+  $publications_collection->ingestDatastream($datastream);
+
+  $datastream = $publications_collection->constructDatastream('TN', 'M');
+  $datastream->label = 'Thumbnail';
+  $datastream->mimetype = 'image/png';
+  $datastream->setContentFromFile("$module_path/images/publications.png", FALSE);
+  $publications_collection->ingestDatastream($datastream);
+
+  return array(
+    'islandora_livingresearchlab' => array(
+      'title' => 'DSU Living Research Lab Solution Pack',
+      'objects' => array(
+        $births_collection,
+        $experiments_collection,
+        $mice_collection,
+        $protocols_collection,
+        $publications_collection,
+      ),
+    ),
+  );
+}

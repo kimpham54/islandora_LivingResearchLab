@@ -1,0 +1,13 @@
+
+root {
+  display: block;
+}
+
+.livingresearchlab_thumb {
+  float: left;
+  padding: 4%;
+}
+.islandora-livingresearchlab-content {
+  color: maroon;
+  font-size: 120%;
+}

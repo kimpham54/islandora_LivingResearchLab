@@ -1,0 +1,5 @@
+name = Islandora Living Research Lab Solution Pack
+description = LRL LAB TEST 1-2-3-4-5-6-7-8aug25,1140h.
+package = Islandora
+version = "7.x-1.x-dev"
+core = "7.x"
